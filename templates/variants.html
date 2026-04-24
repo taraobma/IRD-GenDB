@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block title %}Variants — IRD-GenDB{% endblock %}
+
+{% block content %}
+
+<!-- ── Variant Hotspots ───────────────────────────────────────────────────── -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-white border-0 fw-semibold">
+    <i class="bi bi-crosshair2 me-1 text-danger"></i>Variant Hotspots
+  </div>
+  <div class="card-body pb-0">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="hotspotTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-diag-btn" data-bs-toggle="tab"
+                data-bs-target="#tab-diag" type="button" role="tab">
+          <i class="bi bi-clipboard2-pulse me-1"></i>By Diagnosis
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-gene-btn" data-bs-toggle="tab"
+                data-bs-target="#tab-gene" type="button" role="tab">
+          <i class="bi bi-dna me-1"></i>By Gene
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content pt-3" id="hotspotTabContent">
+
+      <!-- Tab 1: By Diagnosis -->
+      <div class="tab-pane fade show active" id="tab-diag" role="tabpanel">
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+          <select id="hotspotDiag" class="form-select form-select-sm" style="max-width:260px;">
+            <option value="">— Select Diagnosis Group —</option>
+          </select>
+          <span class="small text-muted" id="hotspotDiagSubtitle"></span>
+        </div>
+        <div id="hotspotDiagContent" class="text-muted small text-center py-3">
+          Select a diagnosis above to view the most frequently observed variants.
+        </div>
+      </div>
+
+      <!-- Tab 2: By Gene -->
+      <div class="tab-pane fade" id="tab-gene" role="tabpanel">
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+          <select id="hotspotGene" class="form-select form-select-sm" style="max-width:260px;">
+            <option value="">— Select Gene —</option>
+          </select>
+          <span class="small text-muted" id="hotspotGeneSubtitle"></span>
+        </div>
+        <div id="hotspotGeneContent" class="text-muted small text-center py-3">
+          Select a gene above to view the most frequently observed variants.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-dna me-2 text-teal"></i>Variant Browser</h4>
+  <a href="{{ url_for('variants_export', gene=f_gene, pathogenicity=f_path, vtype=f_vtype) }}"
+     class="btn btn-sm btn-outline-success">
+    <i class="bi bi-download me-1"></i>Export CSV
+  </a>
+</div>
+
+<!-- Filters -->
+<form method="GET" action="{{ url_for('variants') }}" class="card border-0 shadow-sm p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Gene</label>
+      <input type="text" name="gene" class="form-control form-control-sm"
+             placeholder="e.g. ABCA4" value="{{ f_gene }}">
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Pathogenicity</label>
+      <select name="pathogenicity" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for p in pathogenicities %}
+        <option value="{{ p }}" {% if p == f_path %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Variant Type</label>
+      <select name="vtype" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for v in vtypes %}
+        <option value="{{ v }}" {% if v == f_vtype %}selected{% endif %}>{{ v }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1 d-flex gap-1">
+      <button type="submit" class="btn btn-primary btn-sm w-100">
+        <i class="bi bi-funnel"></i>
+      </button>
+      <a href="{{ url_for('variants') }}" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    </div>
+  </div>
+</form>
+
+<p class="text-muted small mb-2">Showing <strong>{{ total }}</strong> variant(s)</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover table-bordered align-middle data-table">
+    <thead class="table-header-custom">
+      <tr>
+        <th>ID</th>
+        <th>Gene</th>
+        <th>Transcript</th>
+        <th>HGVS_c</th>
+        <th>Protein Change</th>
+        <th id="pathogenicity-header" style="cursor: pointer;">Pathogenicity</th>
+        <th>Type</th>
+        <th>Taiwan AF</th>
+        <th>gnomAD East AF</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="text-muted small">{{ r[0] }}</td>
+        <td>
+          <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[1] }}"
+             target="_blank" class="gene-link fw-semibold">{{ r[1] or '—' }}</a>
+        </td>
+        <td class="text-muted small">{{ r[2] or '—' }}</td>
+        <td class="font-monospace small">{{ r[3] or '—' }}</td>
+        <td class="font-monospace small">{{ r[4] or '—' }}</td>
+        <td>
+          {% set pred = r[5] or '' %}
+          {% if 'Pathogenic' in pred and 'Likely' not in pred %}
+            <span class="badge bg-danger">Pathogenic</span>
+          {% elif 'Likely Pathogenic' in pred %}
+            <span class="badge bg-warning text-dark">Likely Pathogenic</span>
+          {% elif 'Uncertain' in pred %}
+            <span class="badge bg-secondary">VUS</span>
+          {% else %}
+            <span class="badge bg-light text-dark border">{{ pred[:30] }}</span>
+          {% endif %}
+        </td>
+        <td><span class="badge-vtype">{{ r[6] or '—' }}</span></td>
+        <td class="small">{{ r[7] if r[7] else '—' }}</td>
+        <td class="small">{{ r[8] if r[8] else '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="text-center text-muted py-4">No variants found matching your filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DIAG_FULL = {
+  'RP':'Retinitis Pigmentosa','MD':'Macular Dystrophy','LCA':'Leber Congenital Amaurosis',
+  'BCD':"Bietti's Crystalline Dystrophy",'CD':'Cone Dystrophy','CRD':'Cone-Rod Dystrophy',
+  'CSNB':'Congenital Stationary Night Blindness','FEVR':'Familial Exudative Vitreoretinopathy',
+  'OMD':'Occult Macular Dystrophy','RCD':'Rod-Cone Dystrophy','RS':'Retinoschisis',
+  'RP- Usher syndrome':'RP - Usher Syndrome','RP-BBS':'RP - Bardet-Biedl Syndrome',
+  'MD-BEST':'MD - Best Disease','MD-STGD':'MD - Stargardt Disease',
+};
+function fullDiag(d) { return DIAG_FULL[d] || d; }
+
+const PATH_COLORS = {
+  'Pathogenic':'#dc3545','Likely Pathogenic':'#fd7e14',
+  'Uncertain Significance':'#6c757d','Likely Benign':'#198754','Benign':'#0d6efd'
+};
+
+// add numbers to each pathogenic label for ordering
+const pathogenicityOrder = {
+  'Pathogenic': 0,
+  'Likely Pathogenic': 1,
+  'VUS': 2,
+}
+
+// function to order by pathogenicity on header click
+let pathSortAsc = true; //toggle variable for tracking sorting order
+
+document.getElementById("pathogenicity-header").addEventListener("click", function(){
+  const table = document.querySelector('table tbody');
+  const rows = Array.from(table.querySelectorAll('tr'));
+  
+  rows.sort(function(a,b) {
+    const aVal = a.cells[5].textContent.trim();
+    const bVal = b.cells[5].textContent.trim();
+    const aOrder = pathogenicityOrder[aVal] ?? 99;
+    const bOrder = pathogenicityOrder[bVal] ?? 99;
+    
+    if (pathSortAsc) {
+      return aOrder - bOrder; // Ascending (0, 1, 2...)
+    } else {
+      return bOrder - aOrder; // Descending (...2, 1, 0)
+    }
+       
+    });
+    
+    rows.forEach(row => table.appendChild(row));
+    
+    pathSortAsc = !pathSortAsc; // toggle for next click
+  });
+
+function buildHotspotTable(rows, label, subtitleEl, contentEl) {
+  if (!rows.length) {
+    subtitleEl.textContent = '';
+    contentEl.innerHTML = '<p class="text-muted small text-center py-3">No variant data found.</p>';
+    return;
+  }
+  subtitleEl.textContent = `Top ${rows.length} variants · ${label}`;
+  let html = `<div class="table-responsive">
+    <table class="table table-sm table-hover align-middle mb-0" style="font-size:0.82rem;">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>Gene</th><th>HGVS (c.)</th><th>Protein Change</th>
+          <th>Variant Type</th><th>Pathogenicity</th>
+          <th>TW Biobank AF</th><th>gnomAD East AF</th>
+          <th>Patients</th><th>%</th>
+        </tr>
+      </thead><tbody>`;
+  rows.forEach((r, i) => {
+    const pathKey = Object.keys(PATH_COLORS).find(k => (r.pathogenicity||'').startsWith(k)) || '';
+    const badge = pathKey
+      ? `<span class="badge" style="background:${PATH_COLORS[pathKey]};font-size:0.7rem;">${pathKey}</span>`
+      : (r.pathogenicity || '—');
+    html += `<tr>
+      <td class="text-muted">${i+1}</td>
+      <td><strong>${r.gene}</strong></td>
+      <td><code class="text-primary-custom">${r.hgvsc}</code></td>
+      <td>${r.protein_change}</td>
+      <td><span class="badge bg-light text-dark border">${r.variant_type}</span></td>
+      <td>${badge}</td>
+      <td class="text-muted">${r.taiwan_af}</td>
+      <td class="text-muted">${r.gnomad_af}</td>
+      <td class="fw-semibold">${r.count}</td>
+      <td><span class="badge bg-secondary">${r.pct}%</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  contentEl.innerHTML = html;
+}
+
+function loadHotspot(param, value, subtitleEl, contentEl) {
+  subtitleEl.textContent = '';
+  contentEl.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>';
+  fetch(`api/hotspot?${param}=${encodeURIComponent(value)}`)
+    .then(r => { if (!r.ok) throw new Error('Server error ' + r.status); return r.json(); })
+    .then(rows => {
+      const label = param === 'diag' ? fullDiag(value) : value;
+      buildHotspotTable(rows, label, subtitleEl, contentEl);
+    })
+    .catch(err => {
+      contentEl.innerHTML = `<p class="text-danger small text-center py-3">Failed to load: ${err.message}</p>`;
+    });
+}
+
+// Populate diagnosis dropdown
+fetch('api/chart-data')
+  .then(r => r.json())
+  .then(d => {
+    const sel = document.getElementById('hotspotDiag');
+    d.diagnoses.forEach(diag => {
+      const o = document.createElement('option');
+      o.value = diag; o.textContent = fullDiag(diag);
+      sel.appendChild(o);
+    });
+  });
+
+document.getElementById('hotspotDiag').addEventListener('change', function() {
+  if (this.value) loadHotspot('diag', this.value,
+    document.getElementById('hotspotDiagSubtitle'),
+    document.getElementById('hotspotDiagContent'));
+});
+
+// Populate gene dropdown
+fetch('api/genes')
+  .then(r => r.json())
+  .then(genes => {
+    const sel = document.getElementById('hotspotGene');
+    genes.forEach(g => {
+      const o = document.createElement('option');
+      o.value = g; o.textContent = g;
+      sel.appendChild(o);
+    });
+  });
+
+document.getElementById('hotspotGene').addEventListener('change', function() {
+  if (this.value) loadHotspot('gene', this.value,
+    document.getElementById('hotspotGeneSubtitle'),
+    document.getElementById('hotspotGeneContent'));
+});
+
+// ── Cascading filters ──────────────────────────────────────────────────────
+function refreshVariantOptions() {
+  const params = {
+    gene:         $('input[name="gene"]').val().trim(),
+    pathogenicity: $('select[name="pathogenicity"]').val(),
+    vtype:        $('select[name="vtype"]').val()
+  };
+
+  $.getJSON("{{ url_for('variant_filter_options') }}", params, function(data) {
+
+    // Repopulate pathogenicity
+    const curPath = $('select[name="pathogenicity"]').val();
+    const $path = $('select[name="pathogenicity"]').empty().append('<option value="">All</option>');
+    data.pathogenicities.forEach(p => {
+      $path.append($('<option>').val(p).text(p).prop('selected', p === curPath));
+    });
+    if (!data.pathogenicities.includes(curPath)) $path.val('');
+
+    // Repopulate variant type
+    const curVtype = $('select[name="vtype"]').val();
+    const $vtype = $('select[name="vtype"]').empty().append('<option value="">All</option>');
+    data.vtypes.forEach(v => {
+      $vtype.append($('<option>').val(v).text(v).prop('selected', v === curVtype));
+    });
+    if (!data.vtypes.includes(curVtype)) $vtype.val('');
+  });
+}
+
+$('select[name="pathogenicity"], select[name="vtype"]').on('change', refreshVariantOptions);
+
+let geneTimer;
+$('input[name="gene"]').on('input', function() {
+  clearTimeout(geneTimer);
+  geneTimer = setTimeout(refreshVariantOptions, 400);
+});
+
+refreshVariantOptions();
+</script>
+{% endblock %}

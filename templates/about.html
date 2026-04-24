@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}About — IRD-GenDB{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2">
+
+  <!-- Hero -->
+  <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #1a6faf 0%, #1a6faf 35%, #2ea8a0 100%);">
+    <div class="card-body py-5 px-4 text-white">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <h2 class="fw-bold mb-2"><i class="bi bi-eye-fill me-2"></i>IRD-GenDB</h2>
+          <h5 class="fw-normal mb-3 opacity-75">Inherited Retinal Disease Genomic Database</h5>
+          <p class="mb-0" style="font-size:1.05rem; opacity:0.9;">
+            Inhertied retinal diseases (IRDs) are a heterogeneous group of disorders characterized by progressive photoreceptor degeneration resulting in visual impairment or blindness. There have been over 270 genes identified to cause IRDs.
+            <br>
+            <br>
+            This project aims to develop a database holding clinical data surrounding IRDs, including information on many variants, such as, the gene affected, the type of mutation, the pathogenicity, and other variables. This database also contains patient records from National Taiwan University Hospital located in Taipei, Taiwan. Patient names and other sensitive information were not recorded to this database.
+
+          </p>
+          <div class="mt-3">
+            <a href="https://www.nature.com/articles/s41525-021-00180-1" target="_blank"
+               class="btn btn-outline-light btn-sm me-2">
+              <i class="bi bi-journal-text me-1"></i>Chen et al. (npj Genomic Medicine, 2021)
+            </a>
+          </div>
+        </div>
+
+
+        <div class="col-lg-5 mt-4 mt-lg-0">
+          <div class="p-4" style="background: rgba(255,255,255,0.30); border-radius: 5px 50px 5px 50px; backdrop-filter: blur(4px); min-height: 250px;">
+            <h6 class="fw-bold mb-3">Contributors</h6>
+            <p class> 
+            This project was developed at Boston University as the final project for BF768 Spring 2026 under Dr. G. Benson, supervised by Dr. Ta-Ching Chen
+            <br>
+            <br>
+            Chein-Yu Lin <br>
+            Ryleigh Jerome <br>
+            Patrick Rosetti <br>
+            Nitchakan Obma
+            
+            </p>
+          </div>
+        </div>
+
+
+
+          </div>
+        </div>
+      </div>
+
+
+
+</div>
+{% endblock %}

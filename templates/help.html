@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Help - IRD-GenDB{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <h1 class="mb-4">
+      <!-- Question mark circle with the title -->
+      <i class="bi bi-question-circle-fill me-2"></i>Help & Using IRD-GenDB
+    </h1>
+    <!-- Card on the information on the database -->
+    <div class="card mb-4">
+      <div class="card-header bg-primary-custom text-white">
+        <!-- Title of card -->
+        <h5 class="mb-0">Welcome to IRD-GenDB</h5>
+      </div>
+      <!-- Body message -->
+      <div class="card-body">
+        <p>
+          IRD-GenDB is a genetic variant database for Inherited Retinal Diseases (IRD). 
+          The database stores patient data, genetic variants, and associated information to help 
+          researchers and clinicians manage and search IRD-related genetic data.
+        </p>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <!-- Title with a speedometer logo -->
+          <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          The Dashboard provides a quick overview of the database contents:
+        </p>
+        <ul>
+          <!-- Bolded list of stats followed by unbolded descriptions -->
+          <li><strong>Total Patients:</strong> Number of patients in the database</li>
+          <li><strong>Total Variants:</strong> Number of recorded genetic variants</li>
+          <li><strong>Unique Genes:</strong> Number of distinct genes with variants</li>
+          <li><strong>Most Common Gene:</strong> Gene with the highest number of variants</li>
+        </ul>
+        <!-- Tips section on the Dashboard -->
+        <p class="mt-3"> 
+          <span class="badge bg-info">Tip</span> Use the Dashboard as your quick reference 
+          for database statistics.
+        </p>
+      </div>
+    </div>
+
+    <!-- Patients Page Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <!-- Title of card -->
+          <i class="bi bi-people me-2"></i>Patients Page
+        </h5>
+      </div>
+      <!-- Body message -->
+      <div class="card-body">
+        <p>
+          The Patients page displays a browsable list of all patients in the database and their corresponding age, diagnosis, inheritance, and gene information. 
+          Use the filters to narrow down results:
+        </p>
+        <!-- Filter Table -->
+        <h6 class="mt-3"><strong>Filter Fields:</strong></h6>
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <!-- Header row for filter fields -->
+              <th>Field</th>
+              <th>Input Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Diagnosis</strong></td>
+              <td><span class="badge bg-secondary">Dropdown</span></td>
+              <td>Select a diagnosis category (e.g., Leber Congenital Amaurosis, Retinitis Pigmentosa)</td>
+            </tr>
+            <tr>
+              <td><strong>Sex</strong></td>
+              <td><span class="badge bg-secondary">Dropdown</span></td>
+              <td>Filter by Male (M) or Female (F)</td>
+            </tr>
+            <tr>
+              <td><strong>Inheritance</strong></td>
+              <td><span class="badge bg-secondary">Dropdown</span></td>
+              <td>Select inheritance pattern (e.g., Autosomal Dominant, Autosomal Recessive, X-Linked)</td>
+            </tr>
+            <tr>
+              <td><strong>Gene</strong></td>
+              <td><span class="badge bg-warning text-dark">Text Input</span></td>
+              <td>Enter gene name (e.g., <code>CEP290</code>, <code>RHO</code>, <code>USH2A</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h6 class="mt-3"><strong>Actions:</strong></h6>
+        <ul>
+          <li>Click <strong>Filter button</strong> (funnel icon) to apply filters</li>
+          <li>Click <strong>Clear button</strong> (X icon) to reset all filters</li>
+          <li>Click <strong>Export CSV</strong> to download filtered patient data</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Variants Page Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-dna me-2"></i>Variants Page
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          The Variants page shows genetic variants with two main features:
+        </p>
+        
+        <h6 class="mt-3"><strong>Variant Hotspots (Tabs):</strong></h6>
+        <ul>
+          <li><strong>By Diagnosis:</strong> Select a diagnosis group to see the most frequently observed variants for that condition</li>
+          <li><strong>By Gene:</strong> Select a gene to view variants commonly found in that gene</li>
+        </ul>
+        
+        <h6 class="mt-3"><strong>Variant Table Columns:</strong></h6>
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Column</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sample ID</strong></td>
+              <td>Unique identifier for the patient sample</td>
+            </tr>
+            <tr>
+              <td><strong>Gene</strong></td>
+              <td>Gene name associated with the variant (e.g., CEP290, RHO)</td>
+            </tr>
+            <tr>
+              <td><strong>HGVS_c.</strong></td>
+              <td>cDNA notation describing the nucleotide change (e.g., c.5658C>T)</td>
+            </tr>
+            <tr>
+              <td><strong>Protein Change</strong></td>
+              <td>Amino acid change notation (e.g., p.Gly1886Asp)</td>
+            </tr>
+            <tr>
+              <td><strong>Pathogenicity</strong></td>
+              <td>Classification: Pathogenic, Likely Pathogenic, Benign, etc.</td>
+            </tr>
+            <tr>
+              <td><strong>Variant Type</strong></td>
+              <td>Type of mutation: SNV, Deletion, Insertion, etc.</td>
+            </tr>
+            <tr>
+              <td><strong>Zygosity</strong></td>
+              <td>Homozygous or Heterozygous</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Search Page Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-search me-2"></i>Search Page
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          The Search page provides two search modes:
+        </p>
+        
+        <h6 class="mt-3"><strong>Search Modes:</strong></h6>
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Mode</th>
+              <th>Input Format</th>
+              <th>What It Finds</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Search by Gene</strong></td>
+              <td><span class="badge bg-warning text-dark">Text</span> (e.g., <code>CEP290</code>)</td>
+              <td>All variants and patients associated with a specific gene</td>
+            </tr>
+            <tr>
+              <td><strong>Search by Diagnosis</strong></td>
+              <td><span class="badge bg-warning text-dark">Text</span> (e.g., <code>RP</code>, <code>LCA</code>)</td>
+              <td>All variants and patients with a specific diagnosis</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h6 class="mt-3"><strong>How to Search:</strong></h6>
+        <ol>
+          <li>Select a search mode by clicking the corresponding button</li>
+          <li>Enter your search term in the text box</li>
+          <li>Click <strong>Search</strong> or press Enter</li>
+          <li>Results will display in a table below</li>
+        </ol>
+        
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Autocomplete:</strong> As you type, suggestions may appear. 
+          Select from the dropdown to quickly fill in valid search terms.
+        </div>
+      </div>
+    </div>
+
+    <!-- About Page Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-info-circle me-2"></i>About Page
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          The About page provides information about the IRD-GenDB project, including:
+        </p>
+        <ul>
+          <li>Project purpose and goals</li>
+          <li>Team information</li>
+          <li>Database description and data sources</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Data Format Reference -->
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-book me-2"></i>Data Format Reference
+        </h5>
+      </div>
+      <div class="card-body">
+        <h6><strong>HGVS Nomenclature:</strong></h6>
+        <p class="small">
+          Genetic variants are described using HGVS (HGAMG Variant Sequence) notation:
+        </p>
+        <ul class="small">
+          <li><strong>c.</strong> (coding DNA) - e.g., <code>c.5658C>T</code> means nucleotide 5658 changed from C to T</li>
+          <li><strong>p.</strong> (protein) - e.g., <code>p.Gly1886Asp</code> means amino acid Gly changed to Asp at position 1886</li>
+        </ul>
+        
+        <h6 class="mt-3"><strong>Common Diagnosis Codes:</strong></h6>
+        <ul class="small">
+          <li><strong>RP</strong> - Retinitis Pigmentosa</li>
+          <li><strong>LCA</strong> - Leber Congenital Amaurosis</li>
+          <li><strong>Stargardt</strong> - Stargardt Disease (ABCA4)</li>
+          <li><strong>CRD</strong> - Cone-Rod Dystrophy</li>
+        </ul>
+
+        <!-- Identifying some common inheritance patterns that could be found in the database -->
+        <h6 class="mt-3"><strong>Common Inheritance Patterns:</strong></h6>
+        <ul class="small">
+          <li><strong>AD</strong> - Autosomal Dominant</li>
+          <li><strong>AR</strong> - Autosomal Recessive</li>
+          <li><strong>XLR</strong> - X-Linked Recessive</li>
+          <li><strong>Mitochondrial</strong> - Maternal inheritance</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Support Section with contact information of the student developers -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <!-- Title of the card -->
+          <i class="bi bi-people me-2"></i>Development Team 
+        </h5>
+      </div>
+      <!-- Body message -->
+      <div class="card-body">
+        <p>If you have questions about using the database, need assistance, or feedback, please contact the student developers:</p>
+        <!-- Contact information -->
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            <i class="bi bi-envelope me-2"></i>
+            <span class="me-1">Chein-Yu Lin:</span>
+            <a href="mailto:zona7721@bu.edu">zona7721@bu.edu</a>
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-envelope me-2"></i>
+            <span class="me-1">Ryleigh Jerome:</span>
+            <a href="mailto:ryleighj@bu.edu">ryleighj@bu.edu</a>
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-envelope me-2"></i>
+            <span class="me-1">Patrick Rosetti:</span>
+            <a href="mailto:prosetti@bu.edu">prosetti@bu.edu</a>
+          </li>
+          <li class="mb-0">
+            <i class="bi bi-envelope me-2"></i>
+            <span class="me-1">Nitchakan Obma:</span>
+            <a href="mailto:nobma@bu.edu">nobma@bu.edu</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK LINKS - Sidebar Navigation -->
+  <div class="col-lg-4">
+    <div class="card sticky-top" style="top: 20px;">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">Quick Links</h6>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action">
+          <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </a>
+        <a href="{{ url_for('patients') }}" class="list-group-item list-group-item-action">
+          <i class="bi bi-people me-2"></i>Patients
+        </a>
+        <a href="{{ url_for('variants') }}" class="list-group-item list-group-item-action">
+          <i class="bi bi-dna me-2"></i>Variants
+        </a>
+        <a href="{{ url_for('search') }}" class="list-group-item list-group-item-action">
+          <i class="bi bi-search me-2"></i>Search
+        </a>
+        <a href="{{ url_for('about') }}" class="list-group-item list-group-item-action">
+          <i class="bi bi-info-circle me-2"></i>About
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

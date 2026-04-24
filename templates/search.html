@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Search — IRD-GenDB{% endblock %}
+
+{% block content %}
+<span id="baseUrl" data-url="{{ url_for('autocomplete') }}" style="display:none;"></span>
+<h4 class="fw-bold mb-4"><i class="bi bi-search me-2 text-indigo"></i>Search</h4>
+
+<!-- Search form -->
+<div class="card border-0 shadow-sm p-4 mb-4" style="max-width: 700px;">
+  <form method="GET" action="{{ url_for('search') }}">
+    <!-- Mode toggle -->
+    <div class="mb-3">
+      <div class="btn-group w-100" role="group">
+        <input type="radio" class="btn-check" name="mode" id="modeGene"
+               value="gene" {% if mode == 'gene' %}checked{% endif %}>
+        <label class="btn btn-outline-primary" for="modeGene">
+          <i class="bi bi-activity me-1"></i>Search by Gene
+        </label>
+
+        <input type="radio" class="btn-check" name="mode" id="modeSample"
+               value="sample" {% if mode == 'sample' %}checked{% endif %}>
+        <label class="btn btn-outline-primary" for="modeSample">
+          <i class="bi bi-heart-pulse me-1"></i>Search by Diagnosis
+        </label>
+      </div>
+    </div>
+
+    <div style="position:relative; max-width:100%;">
+      <div class="input-group">
+        <input type="text" name="q" class="form-control"
+               id="searchInput" autocomplete="off"
+               placeholder="{% if mode == 'gene' %}e.g. CEP290{% else %}e.g. RP{% endif %}"
+               value="{{ q }}" required>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search me-1"></i>Search
+        </button>
+        {% if q %}
+        <a href="{{ url_for('search') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-x-lg"></i>
+        </a>
+        {% endif %}
+      </div>
+      <div id="suggestions" class="border rounded bg-white shadow-sm"
+           style="display:none; position:absolute; z-index:999; width:100%;"></div>
+    </div>
+  </form>
+</div>
+
+<!-- Results -->
+{% if searched %}
+  {% if rows %}
+    <p class="text-muted small mb-2">
+      Found <strong>{{ rows|length }}</strong> result(s)
+      {% if mode == 'gene' %}for gene "<strong>{{ q }}</strong>"
+      {% else %}for diagnosis "<strong>{{ q }}</strong>"{% endif %}
+    </p>
+
+    {% if mode == 'gene' %}
+    <!-- Gene search results -->
+    <div class="table-responsive">
+      <table class="table table-sm table-hover table-bordered align-middle">
+        <thead class="table-header-custom">
+          <tr>
+            <th>Sample ID</th>
+            <th>Diagnosis</th>
+            <th>Inheritance</th>
+            <th>Gene</th>
+            <th>HGVS_c</th>
+            <th>Protein Change</th>
+            <th>Pathogenicity</th>
+            <th>Variant Type</th>
+            <th>Zygosity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><span class="fw-semibold">{{ r[0] }}</span></td>
+            <td>{{ r[1] or '—' }}</td>
+            <td>{{ r[2] or '—' }}</td>
+            <td>
+              <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[3] }}"
+                 target="_blank" class="gene-link fw-semibold">{{ r[3] or '—' }}</a>
+            </td>
+            <td class="font-monospace small">{{ r[4] or '—' }}</td>
+            <td class="font-monospace small">{{ r[5] or '—' }}</td>
+            <td>
+              {% set pred = r[6] or '' %}
+              {% if 'Pathogenic' in pred and 'Likely' not in pred %}
+                <span class="badge bg-danger">Pathogenic</span>
+              {% elif 'Likely Pathogenic' in pred %}
+                <span class="badge bg-warning text-dark">Likely Pathogenic</span>
+              {% elif 'Uncertain' in pred %}
+                <span class="badge bg-secondary">VUS</span>
+              {% else %}
+                <span class="badge bg-light text-dark border">{{ pred[:25] }}</span>
+              {% endif %}
+            </td>
+            <td>{{ r[7] or '—' }}</td>
+            <td><span class="zyg-badge">{{ r[8] or '—' }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <!-- Diagnosis search results -->
+    <div class="table-responsive">
+      <table class="table table-sm table-hover table-bordered align-middle">
+        <thead class="table-header-custom">
+          <tr>
+            <th>Sample ID</th>
+            <th>Sex</th>
+            <th>Birthday</th>
+            <th>Diagnosis</th>
+            <th>Inheritance</th>
+            <th>Gene 1</th>
+            <th>Zygosity 1</th>
+            <th>Pathogenicity 1</th>
+            <th>Gene 2</th>
+            <th>Zygosity 2</th>
+            <th>Pathogenicity 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td class="fw-semibold">{{ r[0] }}</td>
+            <td>{{ r[1] or '—' }}</td>
+            <td>{{ r[2] or '—' }}</td>
+            <td>{{ r[3] or '—' }}</td>
+            <td>{{ r[4] or '—' }}</td>
+            <td>
+              {% if r[5] %}
+              <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[5] }}"
+                 target="_blank" class="gene-link fw-semibold">{{ r[5] }}</a>
+              {% else %}—{% endif %}
+            </td>
+            <td><span class="zyg-badge">{{ r[9] or '—' }}</span></td>
+            <td>
+              {% set pred = r[8] or '' %}
+              {% if 'Pathogenic' in pred and 'Likely' not in pred %}
+                <span class="badge bg-danger">Pathogenic</span>
+              {% elif 'Likely Pathogenic' in pred %}
+                <span class="badge bg-warning text-dark">Likely Pathogenic</span>
+              {% elif 'Uncertain' in pred %}
+                <span class="badge bg-secondary">VUS</span>
+              {% else %}
+                <span class="badge bg-light text-dark border">{{ pred[:25] }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if r[10] %}
+              <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[10] }}"
+                 target="_blank" class="gene-link fw-semibold">{{ r[10] }}</a>
+              {% else %}—{% endif %}
+            </td>
+            <td><span class="zyg-badge">{{ r[14] or '—' }}</span></td>
+            <td>
+              {% set pred2 = r[13] or '' %}
+              {% if 'Pathogenic' in pred2 and 'Likely' not in pred2 %}
+                <span class="badge bg-danger">Pathogenic</span>
+              {% elif 'Likely Pathogenic' in pred2 %}
+                <span class="badge bg-warning text-dark">Likely Pathogenic</span>
+              {% elif 'Uncertain' in pred2 %}
+                <span class="badge bg-secondary">VUS</span>
+              {% else %}
+                <span class="badge bg-light text-dark border">{{ pred2[:25] }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle me-1"></i>
+      No results found for "<strong>{{ q }}</strong>".
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+$('input[name="mode"]').on('change', function(){
+  const placeholders = { gene: 'e.g. CEP290', sample: 'e.g. RP' };
+  $('#searchInput').attr('placeholder', placeholders[$(this).val()]);
+  $('#suggestions').empty().hide();
+});
+
+$('#searchInput').on('input', function(){
+  const q    = $(this).val().trim();
+  const mode = $('input[name="mode"]:checked').val();
+  if(q.length < 1){ $('#suggestions').empty().hide(); return; }
+  $.getJSON($('#baseUrl').data('url'), { q: q, mode: mode }, function(data){
+    const box = $('#suggestions').empty();
+    if(!data.length){ box.hide(); return; }
+    data.forEach(function(item){
+      $('<div class="suggestion-item px-3 py-1">')
+        .text(item)
+        .on('mousedown', function(){
+          $('#searchInput').val(item);
+          box.hide();
+        })
+        .appendTo(box);
+    });
+    box.show();
+  });
+});
+
+$(document).on('click', function(e){
+  if(!$(e.target).closest('#searchInput, #suggestions').length)
+    $('#suggestions').hide();
+});
+</script>
+{% endblock %}

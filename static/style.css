@@ -1,0 +1,116 @@
+/* ── Variables ─────────────────────────────────────────────────────────── */
+:root {
+  --color-primary: #1a6faf;
+  --color-teal:    #2ea8a0;
+  --color-indigo:  #6c63ff;
+  --color-orange:  #f4845f;
+  --color-pink:    #e05a8a;
+}
+
+/* ── Global ────────────────────────────────────────────────────────────── */
+body {
+  background: #f4f6fb;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.93rem;
+  color: #2d3142;
+}
+
+/* ── Navbar ────────────────────────────────────────────────────────────── */
+.bg-primary-custom {
+  background: linear-gradient(135deg, #1a6faf 0%, #1a8a9f 100%) !important;
+}
+.navbar-brand { letter-spacing: 0.03em; font-size: 1.15rem; }
+
+/* ── Login ─────────────────────────────────────────────────────────────── */
+.login-bg { background: linear-gradient(135deg, #1a6faf 0%, #2ea8a0 100%); }
+.login-card { border-radius: 16px; }
+.login-icon { opacity: 0.9; }
+
+/* ── Stat cards ────────────────────────────────────────────────────────── */
+.stat-card { border-radius: 12px; transition: transform 0.15s; }
+.stat-card:hover { transform: translateY(-2px); }
+.stat-icon { font-size: 1.6rem; }
+.stat-number { font-size: 2rem; font-weight: 700; color: #1a1a2e; line-height: 1.1; }
+.stat-label  { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #7a8199; }
+
+.text-primary-custom { color: var(--color-primary) !important; }
+.text-teal           { color: var(--color-teal) !important; }
+.text-indigo         { color: var(--color-indigo) !important; }
+.text-orange         { color: var(--color-orange) !important; }
+
+/* ── Tables ────────────────────────────────────────────────────────────── */
+.table-header-custom th {
+  background: #1a6faf;
+  color: #fff;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border-color: #1a6faf !important;
+}
+.table > :not(caption) > * > * { padding: 0.45rem 0.6rem; }
+.table-hover tbody tr:hover { background: #edf4fb; }
+
+/* ── Badges ────────────────────────────────────────────────────────────── */
+.badge-diag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #e8f0fe;
+  color: #1a5faf;
+}
+.badge-vtype {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  background: #e6f7f6;
+  color: #1a7a74;
+}
+.zyg-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  background: #f0eeff;
+  color: #5548d9;
+}
+.bg-pink { background-color: var(--color-pink) !important; }
+
+/* ── Gene links ────────────────────────────────────────────────────────── */
+.gene-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.gene-link:hover {
+  text-decoration: underline;
+  color: var(--color-teal);
+}
+
+.suggestion-item {
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.suggestion-item:hover {
+    background-color: #f0f4ff;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+.card { border-radius: 10px; }
+.card-header { border-radius: 10px 10px 0 0 !important; }
+
+/* ── Info label (search detail view) ──────────────────────────────────── */
+.info-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7a8199;
+  font-weight: 600;
+}
+
+.google-visualization-tooltip {
+  pointer-events: none;
+}

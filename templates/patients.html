@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Patients — IRD-GenDB{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="fw-bold mb-0"><i class="bi bi-people me-2 text-primary-custom"></i>Patient Browser</h4>
+  <a href="{{ url_for('patients_export', diagnosis=f_diag, sex=f_sex, inheritance=f_inh, gene=f_gene) }}"
+     class="btn btn-sm btn-outline-success">
+    <i class="bi bi-download me-1"></i>Export CSV
+  </a>
+</div>
+
+<!-- Filters -->
+<form method="GET" action="{{ url_for('patients') }}" class="card border-0 shadow-sm p-3 mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Diagnosis</label>
+      <select name="diagnosis" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for d in diagnoses %}
+        <option value="{{ d }}" {% if d == f_diag %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-2">
+      <label class="form-label small fw-semibold mb-1">Sex</label>
+      <select name="sex" class="form-select form-select-sm">
+        <option value="">All</option>
+        <option value="M" {% if f_sex == 'M' %}selected{% endif %}>Male</option>
+        <option value="F" {% if f_sex == 'F' %}selected{% endif %}>Female</option>
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Inheritance</label>
+      <select name="inheritance" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for i in inheritances %}
+        <option value="{{ i }}" {% if i == f_inh %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <label class="form-label small fw-semibold mb-1">Gene</label>
+      <input type="text" name="gene" class="form-control form-control-sm"
+             placeholder="e.g. CEP290" value="{{ f_gene }}">
+    </div>
+    <div class="col-md-1 d-flex gap-1">
+      <button type="submit" class="btn btn-primary btn-sm w-100">
+        <i class="bi bi-funnel"></i>
+      </button>
+      <a href="{{ url_for('patients') }}" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-lg"></i>
+      </a>
+    </div>
+  </div>
+</form>
+
+<p class="text-muted small mb-2">Showing <strong>{{ total }}</strong> patient(s)</p>
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover table-bordered align-middle data-table">
+    <thead class="table-header-custom">
+      <tr>
+        <th>Sample ID</th>
+        <th>Sex</th>
+        <th>Current Age</th>
+        <th>Diagnosis</th>
+        <th>Inheritance</th>
+        <th>Gene 1</th>
+        <th>Zyg 1</th>
+        <th>Gene 2</th>
+        <th>Zyg 2</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td><a href="{{ url_for('search', mode='sample', q=r[0]) }}" class="fw-semibold text-decoration-none">{{ r[0] }}</a></td>
+        <td>
+          {% if r[1] == 'M' %}<span class="badge bg-info text-dark">M</span>
+          {% elif r[1] == 'F' %}<span class="badge bg-pink">F</span>
+          {% else %}{{ r[1] or '—' }}{% endif %}
+        </td>
+        <td>{{ r[2] or '—' }}</td>
+        <td><span class="badge-diag">{{ r[3] or '—' }}</span></td>
+        <td>{{ r[4] or '—' }}</td>
+        <td>
+          {% if r[5] %}
+          <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[5] }}"
+             target="_blank" class="gene-link">{{ r[5] }}</a>
+          {% else %}—{% endif %}
+        </td>
+        <td><span class="zyg-badge">{{ r[6] or '—' }}</span></td>
+        <td>
+          {% if r[7] %}
+          <a href="https://www.ncbi.nlm.nih.gov/gene/?term={{ r[7] }}"
+             target="_blank" class="gene-link">{{ r[7] }}</a>
+          {% else %}—{% endif %}
+        </td>
+        <td><span class="zyg-badge">{{ r[8] or '—' }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="10" class="text-center text-muted py-4">No patients found matching your filters.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Highlight matching gene rows
+$(function(){
+  const gene = "{{ f_gene }}".toLowerCase();
+  if(gene){
+    $("td .gene-link").each(function(){
+      if($(this).text().toLowerCase().includes(gene)){
+        $(this).closest("tr").addClass("table-warning");
+      }
+    });
+  }
+});
+
+// Cascading filters
+function refreshOptions(){
+  const params = {
+    diagnosis:   $('select[name="diagnosis"]').val(),
+    sex:         $('select[name="sex"]').val(),
+    inheritance: $('select[name="inheritance"]').val(),
+    gene:        $('input[name="gene"]').val().trim()
+  };
+
+  $.getJSON("{{ url_for('filter_options') }}", params, function(data){
+
+    // Repopulate diagnosis
+    const curDiag = $('select[name="diagnosis"]').val();
+    const $diag = $('select[name="diagnosis"]').empty().append('<option value="">All</option>');
+    data.diagnoses.forEach(d => {
+      $diag.append($('<option>').val(d).text(d).prop('selected', d === curDiag));
+    });
+    if(!data.diagnoses.includes(curDiag)) $diag.val('');
+
+    // Repopulate sex
+    const curSex = $('select[name="sex"]').val();
+    const $sex = $('select[name="sex"]').empty().append('<option value="">All</option>');
+    [['M','Male'],['F','Female']].forEach(([val, label]) => {
+      if(data.sexes.includes(val))
+        $sex.append($('<option>').val(val).text(label).prop('selected', val === curSex));
+    });
+    if(!data.sexes.includes(curSex)) $sex.val('');
+
+    // Repopulate inheritance
+    const curInh = $('select[name="inheritance"]').val();
+    const $inh = $('select[name="inheritance"]').empty().append('<option value="">All</option>');
+    data.inheritances.forEach(i => {
+      $inh.append($('<option>').val(i).text(i).prop('selected', i === curInh));
+    });
+    if(!data.inheritances.includes(curInh)) $inh.val('');
+  });
+}
+
+// Trigger on any filter change
+$('select[name="diagnosis"], select[name="sex"], select[name="inheritance"]').on('change', refreshOptions);
+
+// Debounce gene input so it doesn't fire on every keystroke
+let geneTimer;
+$('input[name="gene"]').on('input', function(){
+  clearTimeout(geneTimer);
+  geneTimer = setTimeout(refreshOptions, 400);
+});
+
+// Run once on load to set initial state
+refreshOptions();
+</script>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — IRD-GenDB{% endblock %}
+
+{% block content %}
+<h4 class="fw-bold mb-4"><i class="bi bi-speedometer2 me-2 text-primary-custom"></i>Dashboard</h4>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon text-primary-custom mb-2"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-number">{{ total_patients }}</div>
+        <div class="stat-label">Total Patients</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon text-teal mb-2"><i class="bi bi-eye-fill"></i></div>
+        <div class="stat-number">{{ total_variants }}</div>
+        <div class="stat-label">Total Variants</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon text-indigo mb-2"><i class="bi bi-view-list"></i></div>
+        <div class="stat-number">{{ total_genes }}</div>
+        <div class="stat-label">Unique Genes</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon text-orange mb-2"><i class="bi bi-bar-chart-fill"></i></div>
+        <div class="stat-number" id="topGeneCount">—</div>
+        <div class="stat-label">Most Common Gene</div>
+        <div class="small text-muted" id="topGeneName"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IRD Intro -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1 text-primary-custom"></i>About Inherited Retinal Dystrophies (IRDs)</h6>
+    <p class="mb-2 small text-muted">
+      Inherited Retinal Dystrophies are a group of rare genetic disorders causing progressive vision loss
+      due to degeneration of photoreceptor cells or the retinal pigment epithelium. They affect ~1 in 2,000
+      people worldwide and are caused by mutations in over 270 genes. This database catalogues patients and
+      variants across the major IRD subtypes.
+    </p>
+    <a class="small text-primary-custom text-decoration-none" data-bs-toggle="collapse" href="#diagGlossary" role="button">
+      <i class="bi bi-table me-1"></i>Show / hide diagnosis glossary ▾
+    </a>
+    <div class="collapse mt-2" id="diagGlossary">
+      <table class="table table-sm table-bordered small mb-0">
+        <thead class="table-light">
+          <tr><th style="width:140px">Code</th><th>Full Name</th><th>Brief Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>RP</td><td>Retinitis Pigmentosa</td><td>Most common IRD; rod-first degeneration causing night blindness and tunnel vision</td></tr>
+          <tr><td>RP-BBS</td><td>RP – Bardet-Biedl Syndrome</td><td>Syndromic RP with obesity, polydactyly and renal anomalies</td></tr>
+          <tr><td>RP – Usher Syndrome</td><td>RP – Usher Syndrome</td><td>RP combined with sensorineural hearing loss</td></tr>
+          <tr><td>MD</td><td>Macular Dystrophy</td><td>Central vision loss due to macular degeneration</td></tr>
+          <tr><td>MD-BEST</td><td>MD – Best Disease</td><td>Autosomal dominant macular dystrophy caused by <em>BEST1</em> mutations</td></tr>
+          <tr><td>MD-STGD</td><td>MD – Stargardt Disease</td><td>Most common juvenile macular dystrophy; caused by <em>ABCA4</em> mutations</td></tr>
+          <tr><td>LCA</td><td>Leber Congenital Amaurosis</td><td>Severe early-onset retinal dystrophy presenting at birth or infancy</td></tr>
+          <tr><td>CRD</td><td>Cone-Rod Dystrophy</td><td>Cone-first degeneration causing central vision and colour vision loss</td></tr>
+          <tr><td>CD</td><td>Cone Dystrophy</td><td>Isolated cone dysfunction without significant rod involvement</td></tr>
+          <tr><td>RCD</td><td>Rod-Cone Dystrophy</td><td>Rod-first degeneration, similar presentation to RP</td></tr>
+          <tr><td>CSNB</td><td>Congenital Stationary Night Blindness</td><td>Non-progressive night blindness present from birth</td></tr>
+          <tr><td>FEVR</td><td>Familial Exudative Vitreoretinopathy</td><td>Abnormal retinal vascular development leading to traction and detachment</td></tr>
+          <tr><td>BCD</td><td>Bietti's Crystalline Dystrophy</td><td>Lipid crystal deposits in cornea and retina causing progressive degeneration</td></tr>
+          <tr><td>OMD</td><td>Occult Macular Dystrophy</td><td>Macular dysfunction with normal fundus appearance; diagnosed by ERG</td></tr>
+          <tr><td>RS</td><td>Retinoschisis</td><td>X-linked splitting of retinal layers causing central vision loss in males</td></tr>
+          <tr><td>Choroideremia</td><td>Choroideremia</td><td>X-linked degeneration of choroid, RPE and photoreceptors</td></tr>
+          <tr><td>Achromatopsia</td><td>Achromatopsia</td><td>Complete absence of cone function; total colour blindness from birth</td></tr>
+          <tr><td>Oguchi disease</td><td>Oguchi Disease</td><td>Autosomal recessive stationary night blindness with golden fundus sheen</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row 1 -->
+<div class="row g-3 mb-3">
+  <div class="col-md-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-0 fw-semibold">
+        <i class="bi bi-bar-chart-fill me-1 text-primary-custom"></i>Diagnosis Distribution
+      </div>
+      <div class="card-body">
+        <div id="chartDiagnosis"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-0 fw-semibold">
+        <i class="bi bi-pie-chart-fill me-1 text-teal"></i>Variant Types
+      </div>
+      <div class="card-body">
+        <div id="chartVtypes"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row 2 -->
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-0 fw-semibold">
+        <i class="bi bi-bar-chart-steps me-1 text-indigo"></i>Top 10 Genes by Patient Count
+      </div>
+      <div class="card-body">
+        <div id="chartGenes"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-0 fw-semibold">
+        <i class="bi bi-bar-chart me-1 text-orange"></i>Inheritance Patterns
+      </div>
+      <div class="card-body">
+        <div id="chartInheritance"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+google.charts.load('current', { packages: ['corechart', 'bar'] });
+
+const DIAG_FULL = {
+  'RP':'Retinitis Pigmentosa','MD':'Macular Dystrophy','LCA':'Leber Congenital Amaurosis',
+  'BCD':"Bietti's Crystalline Dystrophy",'CD':'Cone Dystrophy','CRD':'Cone-Rod Dystrophy',
+  'CSNB':'Congenital Stationary Night Blindness','FEVR':'Familial Exudative Vitreoretinopathy',
+  'OMD':'Occult Macular Dystrophy','RCD':'Rod-Cone Dystrophy','RS':'Retinoschisis',
+  'RP- Usher syndrome':'RP - Usher Syndrome','RP-BBS':'RP - Bardet-Biedl Syndrome',
+  'MD-BEST':'MD - Best Disease','MD-STGD':'MD - Stargardt Disease',
+};
+function fullDiag(d) { return DIAG_FULL[d] || d; }
+
+const CLASS_COLOR = { 'RP':'#e05a6a', 'MD':'#1a6faf' };
+const INH_COLOR   = { 'AR':'#2ea8a0','AD':'#1a6faf','XL':'#f4845f','MT':'#6c63ff','Not Found':'#adb5bd' };
+const PALETTE = [
+  '#1a6faf','#2ea8a0','#6c63ff','#f4845f',
+  '#43b97f','#e8b24a','#c05cd1','#e05a6a',
+  '#3ea6d4','#7ab648','#a07850','#8ab0c8'
+];
+
+google.charts.setOnLoadCallback(() => {
+  fetch('api/chart-data')
+    .then(r => r.json())
+    .then(d => {
+
+      // Stat card
+      if (d.genes.length) {
+        document.getElementById('topGeneName').textContent  = d.genes[0];
+        document.getElementById('topGeneCount').textContent = d.gene_counts[0] + ' patients';
+      }
+
+      // ── Diagnosis — top 8, rest → Other ────────────────────────────────
+      const TOP_N = 8;
+      let diagLabels = d.diagnoses.slice(0, TOP_N).map(fullDiag);
+      let diagCounts = d.diag_counts.slice(0, TOP_N);
+      let diagPcts   = d.diag_pcts.slice(0, TOP_N);
+
+      if (d.diagnoses.length > TOP_N) {
+        const otherCount = d.diag_counts.slice(TOP_N).reduce((a, b) => a + b, 0);
+        const otherPct   = Math.round(d.diag_pcts.slice(TOP_N).reduce((a, b) => a + b, 0) * 10) / 10;
+        diagLabels.push('Other');
+        diagCounts.push(otherCount);
+        diagPcts.push(otherPct);
+      }
+
+      const diagData = new google.visualization.DataTable();
+      diagData.addColumn('string', 'Diagnosis');
+      diagData.addColumn('number', 'Patients');
+      diagData.addColumn({ type: 'string', role: 'tooltip' });
+      diagData.addColumn({ type: 'string', role: 'style' });
+      diagLabels.forEach((label, i) => {
+        diagData.addRow([
+          label,
+          diagCounts[i],
+          `${label}: ${diagCounts[i]} patients (${diagPcts[i]}%)`,
+          `color: ${PALETTE[i % PALETTE.length]}`
+        ]);
+      });
+      new google.visualization.BarChart(document.getElementById('chartDiagnosis')).draw(diagData, {
+        legend: { position: 'none' },
+        tooltip: { isHtml: false },
+        hAxis: { minValue: 0, format: '0' },
+        chartArea: { left: '38%', width: '52%', height: '85%' },
+        height: 320
+      });
+
+      // ── Variant Types (doughnut) ────────────────────────────────────────
+      const vtypeData = new google.visualization.DataTable();
+      vtypeData.addColumn('string', 'Type');
+      vtypeData.addColumn('number', 'Count');
+      d.vtypes.forEach((t, i) => vtypeData.addRow([t, d.vtype_counts[i]]));
+      new google.visualization.PieChart(document.getElementById('chartVtypes')).draw(vtypeData, {
+        pieHole: 0.4,
+        colors: PALETTE,
+        legend: { position: 'top', textStyle: { fontSize: 11 }, maxLines: 2 },
+        chartArea: {left: 20, right: 20, top: 80, width: '80%', height: '65%'},
+        height: 320,
+        tooltip: { trigger: 'focus' },
+        enableInteractivity: true
+      });
+
+      // ── Top 10 Genes stacked by diagnosis class ─────────────────────────
+      const geneData = new google.visualization.DataTable();
+      geneData.addColumn('string', 'Gene');
+      d.gene_diag_classes.forEach(cls => geneData.addColumn('number', fullDiag(cls)));
+      d.genes.forEach((gene, i) => {
+        geneData.addRow([gene, ...d.gene_diag_classes.map(cls => d.gene_diag_matrix[cls][i])]);
+      });
+      const geneColors = d.gene_diag_classes.map((cls, i) => CLASS_COLOR[cls] || PALETTE[i % PALETTE.length]);
+      new google.visualization.BarChart(document.getElementById('chartGenes')).draw(geneData, {
+        isStacked: true,
+        colors: geneColors,
+        legend: { position: 'top', maxLines: 1, textStyle: { fontSize: 11 }, maxLines: 2},
+        hAxis: { minValue: 0, format: '0' },
+        chartArea: { left: '20%', width: '70%', height: '80%' },
+        height: 320
+      });
+
+      // ── Inheritance Patterns ────────────────────────────────────────────
+      const inhData = new google.visualization.DataTable();
+      inhData.addColumn('string', 'Pattern');
+      inhData.addColumn('number', 'Patients');
+      inhData.addColumn({ type: 'string', role: 'tooltip' });
+      inhData.addColumn({ type: 'string', role: 'style' });
+      d.inh.forEach((pat, i) => {
+        inhData.addRow([
+          pat,
+          d.inh_counts[i],
+          `${pat}: ${d.inh_counts[i]} patients (${d.inh_pcts[i]}%)`,
+          `color: ${INH_COLOR[pat] || '#e8b24a'}`
+        ]);
+      });
+      new google.visualization.BarChart(document.getElementById('chartInheritance')).draw(inhData, {
+        legend: { position: 'none' },
+        tooltip: { isHtml: false },
+        hAxis: { minValue: 0, format: '0' },
+        chartArea: { left: '25%', width: '65%', height: '85%' },
+        height: 220
+      });
+
+    });
+});
+</script>
+{% endblock %}
