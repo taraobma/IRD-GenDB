@@ -1,0 +1,6 @@
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+clinvar_cache.json
+*_cache.json
