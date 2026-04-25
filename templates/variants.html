@@ -113,14 +113,20 @@
         <th>Transcript</th>
         <th>HGVS_c</th>
         <th>Protein Change</th>
-        <th id="pathogenicity-header" style="cursor: pointer;">Pathogenicity</th>
+        <th id="pathogenicity-header" style="cursor:pointer;" title="Click to sort">
+          Pathogenicity (DB) <i class="bi bi-arrow-down-up ms-1" style="font-size:0.75rem;opacity:0.7;"></i>
+        </th>
         <th>Type</th>
         <th>Taiwan AF</th>
         <th>gnomAD East AF</th>
+        <th>ClinVar ID</th>
+        <th>ClinVar Classification</th>
+        <th>Review Status</th>
       </tr>
     </thead>
     <tbody>
       {% for r in rows %}
+      {% set cv = (clinvar|default({})).get(r[0]|string) %}
       <tr>
         <td class="text-muted small">{{ r[0] }}</td>
         <td>
@@ -132,22 +138,82 @@
         <td class="font-monospace small">{{ r[4] or '—' }}</td>
         <td>
           {% set pred = r[5] or '' %}
-          {% if 'Pathogenic' in pred and 'Likely' not in pred %}
-            <span class="badge bg-danger">Pathogenic</span>
-          {% elif 'Likely Pathogenic' in pred %}
+          {% set p = pred|lower %}
+          {% if not pred %}
+            <span class="badge bg-secondary">VUS</span>
+          {% elif 'likely pathogenic' in p %}
             <span class="badge bg-warning text-dark">Likely Pathogenic</span>
-          {% elif 'Uncertain' in pred %}
+          {% elif 'likely benign' in p %}
+            <span class="badge bg-success bg-opacity-75 text-white">Likely Benign</span>
+          {% elif 'pathogenic' in p %}
+            <span class="badge bg-danger">Pathogenic</span>
+          {% elif 'benign' in p %}
+            <span class="badge bg-success">Benign</span>
+          {% elif 'uncertain' in p %}
             <span class="badge bg-secondary">VUS</span>
           {% else %}
-            <span class="badge bg-light text-dark border">{{ pred[:30] }}</span>
+            <span class="badge bg-secondary">VUS</span>
           {% endif %}
         </td>
         <td><span class="badge-vtype">{{ r[6] or '—' }}</span></td>
         <td class="small">{{ r[7] if r[7] else '—' }}</td>
         <td class="small">{{ r[8] if r[8] else '—' }}</td>
+
+        {# ── ClinVar columns ───────────────────────────────────────── #}
+        {% if cv %}
+          {% set sig = cv.significance or '' %}
+          <td class="small">
+            <a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ cv.clinvar_id }}/"
+               target="_blank" class="text-primary-custom fw-semibold">
+              {{ cv.clinvar_id }}
+            </a>
+          </td>
+          <td>
+            {% if 'Pathogenic' in sig and 'Likely' not in sig and 'Conflicting' not in sig %}
+              <span class="badge bg-danger">Pathogenic</span>
+            {% elif 'Likely pathogenic' in sig or 'Likely Pathogenic' in sig %}
+              <span class="badge bg-warning text-dark">Likely Pathogenic</span>
+            {% elif 'Conflicting' in sig %}
+              <span class="badge" style="background:#f4845f;">Conflicting</span>
+            {% elif 'Uncertain' in sig %}
+              <span class="badge bg-secondary">VUS</span>
+            {% elif 'Benign' in sig and 'Likely' not in sig %}
+              <span class="badge bg-success">Benign</span>
+            {% elif 'Likely benign' in sig or 'Likely Benign' in sig %}
+              <span class="badge bg-success bg-opacity-50">Likely Benign</span>
+            {% elif sig %}
+              <span class="badge bg-light text-dark border">{{ sig[:25] }}</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="small">
+            {% set rs = cv.review_status or '' %}
+            {% if 'expert panel' in rs %}
+              <span class="badge bg-success bg-opacity-75 text-white">
+                <i class="bi bi-patch-check-fill me-1"></i>Expert Panel
+              </span>
+            {% elif 'multiple submitters' in rs %}
+              <span class="badge bg-primary bg-opacity-75">Multi-submitter</span>
+            {% elif 'single submitter' in rs %}
+              <span class="badge bg-secondary bg-opacity-75">Single submitter</span>
+            {% elif 'conflicting' in rs %}
+              <span class="badge" style="background:#f4845f;">Conflicting</span>
+            {% elif rs %}
+              <span class="badge bg-light text-dark border">{{ rs[:30] }}</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        {% else %}
+          <td class="text-muted small text-center">—</td>
+          <td class="text-muted small text-center">—</td>
+          <td class="text-muted small text-center">—</td>
+        {% endif %}
+
       </tr>
       {% else %}
-      <tr><td colspan="9" class="text-center text-muted py-4">No variants found matching your filters.</td></tr>
+      <tr><td colspan="11" class="text-center text-muted py-4">No variants found matching your filters.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -177,7 +243,6 @@ const pathogenicityOrder = {
   'Likely Pathogenic': 1,
   'VUS': 2,
 }
-
 // function to order by pathogenicity on header click
 let pathSortAsc = true; //toggle variable for tracking sorting order
 
@@ -292,43 +357,5 @@ document.getElementById('hotspotGene').addEventListener('change', function() {
     document.getElementById('hotspotGeneSubtitle'),
     document.getElementById('hotspotGeneContent'));
 });
-
-// ── Cascading filters ──────────────────────────────────────────────────────
-function refreshVariantOptions() {
-  const params = {
-    gene:         $('input[name="gene"]').val().trim(),
-    pathogenicity: $('select[name="pathogenicity"]').val(),
-    vtype:        $('select[name="vtype"]').val()
-  };
-
-  $.getJSON("{{ url_for('variant_filter_options') }}", params, function(data) {
-
-    // Repopulate pathogenicity
-    const curPath = $('select[name="pathogenicity"]').val();
-    const $path = $('select[name="pathogenicity"]').empty().append('<option value="">All</option>');
-    data.pathogenicities.forEach(p => {
-      $path.append($('<option>').val(p).text(p).prop('selected', p === curPath));
-    });
-    if (!data.pathogenicities.includes(curPath)) $path.val('');
-
-    // Repopulate variant type
-    const curVtype = $('select[name="vtype"]').val();
-    const $vtype = $('select[name="vtype"]').empty().append('<option value="">All</option>');
-    data.vtypes.forEach(v => {
-      $vtype.append($('<option>').val(v).text(v).prop('selected', v === curVtype));
-    });
-    if (!data.vtypes.includes(curVtype)) $vtype.val('');
-  });
-}
-
-$('select[name="pathogenicity"], select[name="vtype"]').on('change', refreshVariantOptions);
-
-let geneTimer;
-$('input[name="gene"]').on('input', function() {
-  clearTimeout(geneTimer);
-  geneTimer = setTimeout(refreshVariantOptions, 400);
-});
-
-refreshVariantOptions();
 </script>
 {% endblock %}

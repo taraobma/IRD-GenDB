@@ -1,9 +1,19 @@
 import io
 import csv
+import json
+import os
 from flask import Flask, render_template, request, Response, jsonify
 import mariadb
 
 app = Flask(__name__)
+
+# Load ClinVar cache once at startup (sits next to app.py)
+_clinvar_path = os.path.join(os.path.dirname(__file__), "clinvar_cache.json")
+try:
+    with open(_clinvar_path) as _f:
+        CLINVAR = json.load(_f)
+except FileNotFoundError:
+    CLINVAR = {}
 
 # ── DB helpers ────────────────────────────────────────────────────────────────
 
@@ -405,7 +415,8 @@ def variants():
                            pathogenicities=pathogenicities,
                            vtypes=vtypes,
                            f_gene=f_gene, f_path=f_path,
-                           f_vtype=f_vtype, total=len(rows))
+                           f_vtype=f_vtype, total=len(rows),
+                           clinvar=CLINVAR)
 
 @app.route("/variants/export")
 def variants_export():

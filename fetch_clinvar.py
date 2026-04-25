@@ -13,6 +13,7 @@ import json
 import time
 import urllib.request
 import urllib.parse
+import xml.etree.ElementTree as ET
 import mariadb
 
 # ── Config ────────────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ def search_clinvar(gene, hgvsc):
         return []
 
 def fetch_summary(var_id):
-    """Fetch ClinVar esummary for a single variation ID and parse key fields."""
+    """Fetch ClinVar esummary for a single variation ID — significance, review status, GRCh38 position."""
     url = _build("esummary.fcgi", db="clinvar", id=var_id)
     try:
         data   = _get(url)
@@ -71,23 +72,18 @@ def fetch_summary(var_id):
         significance  = clf.get("description", "")
         review_status = clf.get("review_status", "")
 
-        # ── GRCh38 chromosome position & allele change ────────────────────
-        grch38_loc    = ""
-        grch38_change = ""
+        # ── GRCh38 chromosome position (ref/alt come from a separate efetch call) ──
+        grch38_loc = ""
         for vset in entry.get("variation_set", []):
             for loc in vset.get("variation_loc", []):
                 if loc.get("assembly_name") == "GRCh38":
                     chrom = loc.get("chr", "")
                     start = loc.get("start", "")
-                    ref   = loc.get("ref", "")
-                    alt   = loc.get("alt", "")
-                    grch38_loc    = f"{chrom}:{start}" if chrom and start else ""
-                    grch38_change = f"{ref}>{alt}"     if ref   and alt   else ""
+                    grch38_loc = f"{chrom}:{start}" if chrom and start else ""
                     break
             if grch38_loc:
                 break
 
-        # ── ClinVar variation title (e.g. NM_000350.3(ABCA4):c.1804C>T) ──
         title = entry.get("title", "")
 
         return {
@@ -96,11 +92,41 @@ def fetch_summary(var_id):
             "significance":  significance,
             "review_status": review_status,
             "grch38_loc":    grch38_loc,
-            "grch38_change": grch38_change,
+            "grch38_change": "",   # filled in by fetch_alleles()
         }
     except Exception as e:
         print(f"    esummary error: {e}")
         return None
+
+def fetch_alleles(var_id):
+    """
+    Fetch ref/alt alleles from ClinVar VCV XML (efetch).
+    The esummary JSON does not include ref/alt in variation_loc — they only appear
+    in the full VCV XML as <SequenceLocation referenceAllele="G" alternateAllele="A"/>.
+    Returns a string like "G>A", or "" if not found.
+    """
+    key_parts = {"email": NCBI_EMAIL}
+    if NCBI_API_KEY:
+        key_parts["api_key"] = NCBI_API_KEY
+    params = urllib.parse.urlencode({**key_parts,
+                                     "db": "clinvar", "id": var_id,
+                                     "rettype": "vcv", "retmode": "xml"})
+    url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?{params}"
+    try:
+        with urllib.request.urlopen(url, timeout=20) as r:
+            xml_bytes = r.read()
+        root = ET.fromstring(xml_bytes)
+        # Walk every <SequenceLocation> element; pick the GRCh38 one
+        for loc in root.iter("SequenceLocation"):
+            if loc.get("Assembly") == "GRCh38":
+                ref = loc.get("referenceAllele", "")
+                alt = loc.get("alternateAllele", "")
+                if ref and alt:
+                    return f"{ref}>{alt}"
+        return ""
+    except Exception as e:
+        print(f"    efetch/allele error: {e}")
+        return ""
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -152,15 +178,21 @@ def main():
             cache[key] = None
             continue
 
-        # Step 2: fetch summary for the first (best) match
+        # Step 2: fetch summary (significance, review status, GRCh38 position)
         result = fetch_summary(ids[0])
         time.sleep(DELAY)
 
-        if result:
-            matched += 1
-            print(f"{result['significance']}  |  {result['review_status']}  |  {result['grch38_loc']} {result['grch38_change']}")
-        else:
+        if not result:
             print("summary fetch failed")
+            cache[key] = None
+            continue
+
+        # Step 3: fetch ref/alt alleles from VCV XML (separate call needed)
+        result["grch38_change"] = fetch_alleles(ids[0])
+        time.sleep(DELAY)
+
+        matched += 1
+        print(f"{result['significance']}  |  {result['review_status']}  |  {result['grch38_loc']} {result['grch38_change']}")
 
         cache[key] = result
 
